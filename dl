@@ -1,7 +1,13 @@
 #!/bin/bash
 
 getState() {
-    gcloud compute instances describe dl --zone=us-east1-c | awk '/status:/ {print $2}'
+    status=$(gcloud compute instances describe dl --zone=us-east1-c | awk '/status:/ {print $2}')
+
+    case $status in 
+        "RUNNING") echo "RUNNING"
+        ;;
+        "TERMINATED") echo "STOPPED"
+    esac
 }
 
 if [ "$#" -ne 1 ]; then
@@ -21,7 +27,7 @@ elif [ "$1" = 'start' ]; then
         gcloud compute instances start dl --zone us-east1-c
     fi
 elif [ "$1" = 'stop' ]; then
-    if [ $state = 'TERMINATED' ]; then
+    if [ $state = 'STOPPED' ]; then
         echo "Instance is already stopped."
         exit
     else
