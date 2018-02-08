@@ -27,4 +27,11 @@ elif [ "$1" = 'stop' ]; then
     else
         gcloud compute instances stop dl --zone us-east1-c
     fi
+elif [ "$1" = 'connect' ]; then
+    if [ $state != 'RUNNING' ]; then
+        echo "Instance is not currently running."
+        exit
+    else
+        gcloud compute --project "personal-194502" ssh --zone "us-east1-c" "rforgione@dl"
+    fi
 fi
