@@ -1,0 +1,54 @@
+#!/bin/bash
+
+if [ "$#" -ne 2 ]; then
+    echo "Please pass 2 args: a machine, and one of 'status', 'stop', 'start', or 'connect'."
+    exit
+fi
+
+MACHINE=$(echo $1)
+
+case $MACHINE in 
+    "dl") # deep learning rig w/ tesla k80
+        ZONE="us-east1-c"
+        ;;
+    "vm") # standard development VM
+        ZONE="us-east1-b"
+        ;;
+esac
+
+getState() {
+    status=$(gcloud compute instances describe $MACHINE --zone=$ZONE | awk '/status:/ {print $2}')
+
+    case $status in 
+        "RUNNING") echo "RUNNING"
+        ;;
+        "TERMINATED") echo "STOPPED"
+    esac
+}
+
+state=$(getState)
+
+if [ "$2" = 'status' ]; then
+    echo $state
+elif [ "$2" = 'start' ]; then
+    if [ $state = 'RUNNING' ]; then
+        echo "Instance is already running."
+        exit
+    else
+        eval "gcloud compute instances start $MACHINE --zone $ZONE"
+    fi
+elif [ "$2" = 'stop' ]; then
+    if [ $state = 'STOPPED' ]; then
+        echo "Instance is already stopped."
+        exit
+    else
+        eval "gcloud compute instances stop $MACHINE --zone $ZONE"
+    fi
+elif [ "$2" = 'connect' ]; then
+    if [ $state != 'RUNNING' ]; then
+        echo "Instance is not currently running."
+        exit
+    else
+        eval "gcloud compute --project \"personal-194502\" ssh --zone \"$ZONE\" \"rforgione@$MACHINE\""
+    fi
+fi
