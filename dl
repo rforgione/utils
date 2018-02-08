@@ -1,0 +1,30 @@
+#!/bin/bash
+
+getState() {
+    gcloud compute instances describe dl --zone=us-east1-c | awk '/status:/ {print $2}'
+}
+
+if [ "$#" -ne 1 ]; then
+    echo "Please pass one of 'status', 'stop', or 'start' as the single argument."
+    exit
+fi
+
+state=$(getState)
+
+if [ "$1" = 'status' ]; then
+    echo $state
+elif [ "$1" = 'start' ]; then
+    if [ $state = 'RUNNING' ]; then
+        echo "Instance is already running."
+        exit
+    else
+        gcloud compute instances start dl --zone us-east1-c
+    fi
+elif [ "$1" = 'stop' ]; then
+    if [ $state = 'TERMINATED' ]; then
+        echo "Instance is already stopped."
+        exit
+    else
+        gcloud compute instances stop dl --zone us-east1-c
+    fi
+fi
